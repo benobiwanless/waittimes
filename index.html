@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Disney Wait Times</title>
+
+  <style>
+    :root {
+      --bg: #05070d;
+      --panel: rgba(12, 18, 32, 0.92);
+      --panel2: rgba(18, 27, 47, 0.96);
+      --line: rgba(110, 170, 255, 0.35);
+      --text: #f7fbff;
+      --muted: #9fb3cc;
+      --blue: #65b8ff;
+      --green: #4cff9a;
+      --yellow: #ffd76a;
+      --red: #ff6262;
+      --shadow: 0 0 24px rgba(35, 120, 255, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(38, 107, 190, 0.25), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(72, 40, 150, 0.22), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding: clamp(6px, 0.8vw, 12px);
+    }
+
+    .topbar {
+      height: clamp(62px, 8.8vh, 90px);
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) minmax(420px, 1.4fr) minmax(230px, 1fr);
+      gap: clamp(6px, 0.8vw, 11px);
+      align-items: center;
+      padding: 0 clamp(8px, 1vw, 16px);
+      margin-bottom: clamp(6px, 0.8vh, 10px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(15, 24, 45, 0.92), rgba(7, 11, 20, 0.92));
+      box-shadow: var(--shadow);
+    }
+
+    .title {
+      min-width: 0;
+      overflow: visible;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(22px, 3.15vw, 42px);
+      line-height: 1.22;
+      padding-bottom: 3px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .title .sub {
+      margin-top: 6px;
+      font-size: clamp(11px, 1.25vw, 17px);
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .weatherbox {
+      min-width: 0;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .weather-main {
+      font-size: clamp(22px, 3vw, 42px);
+      font-weight: 1000;
+      line-height: 1.05;
+      color: var(--blue);
+      text-shadow: 0 0 18px rgba(101, 184, 255, 0.45);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .weather-sub {
+      margin-top: 4px;
+      font-size: clamp(10px, 1.1vw, 15px);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .clockbox {
+      text-align: right;
+      white-space: nowrap;
+      padding-left: clamp(8px, 1vw, 16px);
+    }
+
+    .clock {
+      font-size: clamp(24px, 3.4vw, 46px);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--blue);
+      text-shadow: 0 0 18px rgba(101, 184, 255, 0.45);
+    }
+
+    .refresh {
+      margin-top: 5px;
+      font-size: clamp(10px, 1.1vw, 15px);
+      color: var(--muted);
+    }
+
+    .grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: clamp(6px, 0.8vw, 11px);
+    }
+
+    .park-card {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: linear-gradient(180deg, var(--panel2), var(--panel));
+      box-shadow: var(--shadow);
+    }
+
+    .park-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: clamp(7px, 0.8vw, 12px) clamp(10px, 1.1vw, 16px);
+      border-bottom: 1px solid rgba(110, 170, 255, 0.24);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .park-name {
+      min-width: 0;
+      font-size: clamp(21px, 2.65vw, 38px);
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: 0.035em;
+      text-transform: uppercase;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .avg {
+      font-size: clamp(13px, 1.45vw, 21px);
+      font-weight: 900;
+      color: var(--blue);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .rides {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: repeat(5, minmax(0, 1fr));
+      padding: clamp(5px, 0.7vw, 10px);
+      gap: clamp(3px, 0.45vh, 7px);
+    }
+
+    .ride {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: clamp(8px, 1vw, 16px);
+      align-items: center;
+      padding: 0 clamp(7px, 0.85vw, 13px);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .ride.empty {
+      opacity: 0.28;
+    }
+
+    .ride-name {
+      min-width: 0;
+      font-size: clamp(18px, 2.35vw, 32px);
+      font-weight: 900;
+      line-height: 1.18;
+      padding-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wait {
+      min-width: clamp(76px, 9.2vw, 128px);
+      text-align: right;
+      font-size: clamp(22px, 3.05vw, 41px);
+      font-weight: 1000;
+      line-height: 1.08;
+      padding-bottom: 2px;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .wait.mid {
+      color: var(--yellow);
+    }
+
+    .wait.high {
+      color: var(--red);
+    }
+
+    .mins {
+      display: block;
+      font-size: 0.28em;
+      line-height: 1;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 0;
+    }
+
+    .loading,
+    .error {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: clamp(22px, 3vw, 42px);
+      font-weight: 900;
+    }
+
+    .error {
+      color: var(--red);
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 0.7em;
+      height: 0.7em;
+      border-radius: 50%;
+      margin-right: 0.35em;
+      background: var(--green);
+      box-shadow: 0 0 14px rgba(76, 255, 154, 0.65);
+      vertical-align: 0.03em;
+    }
+
+    .status-dot.bad {
+      background: var(--red);
+      box-shadow: 0 0 14px rgba(255, 98, 98, 0.65);
+    }
+
+    @media (max-aspect-ratio: 4 / 3) {
+      .topbar {
+        height: clamp(64px, 9vh, 92px);
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+      }
+
+      .park-name {
+        font-size: clamp(20px, 4.2vw, 42px);
+      }
+
+      .ride-name {
+        font-size: clamp(18px, 3.3vw, 34px);
+      }
+
+      .wait {
+        font-size: clamp(22px, 4.4vw, 42px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="weatherbox">
+      <div id="weatherMain" class="weather-main">--° Bay Lake</div>
+      <div id="weatherSub" class="weather-sub">Loading weather...</div>
+    </div>
+
+    <div class="title">
+      <h1>Disney Wait Times</h1>
+    </div>
+
+    <div class="clockbox">
+      <div id="clock" class="clock">--:--</div>
+      <div id="lastUpdated" class="refresh">Loading live data...</div>
+    </div>
+  </header>
+
+  <main id="parkGrid" class="grid"></main>
+
+  <script>
+    const PARKS = [
+      {
+        name: "MAGIC KINGDOM",
+        id: "75ea578a-adc8-4116-a54d-dccb60765ef9"
+      },
+      {
+        name: "EPCOT",
+        id: "47f90d2c-e191-4239-a466-5892ef59a88b"
+      },
+      {
+        name: "HOLLYWOOD STUDIOS",
+        id: "288747d1-8b4f-4a64-867e-ea7c9b27bad8"
+      },
+      {
+        name: "ANIMAL KINGDOM",
+        id: "1c84a229-8862-4648-9c71-378ddd2c7693"
+      }
+    ];
+
+    const API_BASE = "https://api.themeparks.wiki/v1/entity";
+    const REFRESH_MS = 60 * 1000;
+
+    const parkGrid = document.getElementById("parkGrid");
+    const clockEl = document.getElementById("clock");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const weatherMainEl = document.getElementById("weatherMain");
+    const weatherSubEl = document.getElementById("weatherSub");
+
+    function formatClock(date = new Date()) {
+      return date.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function updateClock() {
+      clockEl.textContent = formatClock();
+    }
+
+    function shortenRideName(name) {
+      let short = String(name || "").trim();
+
+      const exactMap = {
+        "TRON Lightcycle / Run": "TRON",
+        "Seven Dwarfs Mine Train": "7 Dwarfs Mine Train",
+        "Tiana's Bayou Adventure": "Tiana's Bayou",
+        "Jungle Cruise": "Jungle Cruise",
+        "Peter Pan's Flight": "Peter Pan",
+        "Pirates of the Caribbean": "Pirates",
+        "Haunted Mansion": "Haunted Mansion",
+        "Big Thunder Mountain Railroad": "Big Thunder",
+        "Space Mountain": "Space Mountain",
+        "Buzz Lightyear's Space Ranger Spin": "Buzz Lightyear",
+        "The Many Adventures of Winnie the Pooh": "Winnie the Pooh",
+        "Tomorrowland Transit Authority PeopleMover": "PeopleMover",
+        "Under the Sea ~ Journey of The Little Mermaid": "Little Mermaid",
+        "it’s a small world": "Small World",
+        "it's a small world": "Small World",
+
+        "Guardians of the Galaxy: Cosmic Rewind": "Cosmic Rewind",
+        "Remy's Ratatouille Adventure": "Remy’s Ratatouille",
+        "Frozen Ever After": "Frozen Ever After",
+        "Soarin' Around the World": "Soarin'",
+        "Soarin' Around the World Presented by Delta": "Soarin'",
+        "Soarin'": "Soarin'",
+        "Test Track": "Test Track",
+        "Mission: SPACE": "Mission: SPACE",
+        "Journey Into Imagination With Figment": "Figment",
+        "The Seas with Nemo & Friends": "Nemo & Friends",
+        "Gran Fiesta Tour Starring The Three Caballeros": "Gran Fiesta Tour",
+        "Living with the Land": "Living with the Land",
+
+        "Rock 'n' Roller Coaster Starring Aerosmith": "Rock 'n' Roller Coaster",
+        "Rock ’n’ Roller Coaster Starring Aerosmith": "Rock 'n' Roller Coaster",
+        "The Twilight Zone Tower of Terror™": "Tower of Terror",
+        "The Twilight Zone Tower of Terror": "Tower of Terror",
+        "Mickey & Minnie's Runaway Railway": "Runaway Railway",
+        "Mickey & Minnie’s Runaway Railway": "Runaway Railway",
+        "Star Wars: Rise of the Resistance": "Rise of the Resistance",
+        "Millennium Falcon: Smugglers Run": "Smugglers Run",
+        "Alien Swirling Saucers": "Alien Saucers",
+        "Toy Story Mania!": "Toy Story Mania",
+        "Beauty and the Beast Live on Stage": "Beauty & the Beast",
+        "Indiana Jones™ Epic Stunt Spectacular!": "Indiana Jones Show",
+
+        "Avatar Flight of Passage": "Flight of Passage",
+        "Na'vi River Journey": "Na’vi River",
+        "Kilimanjaro Safaris": "Safari",
+        "Expedition Everest - Legend of the Forbidden Mountain": "Expedition Everest",
+        "DINOSAUR": "Dinosaur",
+        "Kali River Rapids": "Kali River Rapids",
+        "It's Tough to be a Bug!": "Tough to Be a Bug",
+        "Wildlife Express Train": "Wildlife Express"
+      };
+
+      if (exactMap[short]) return exactMap[short];
+
+      short = short
+        .replace("Starring Aerosmith", "")
+        .replace("The Twilight Zone ", "")
+        .replace("Millennium Falcon: ", "")
+        .replace("Star Wars: ", "")
+        .replace("Guardians of the Galaxy: ", "")
+        .replace("Journey of The ", "")
+        .replace("The Many Adventures of ", "")
+        .replace("Tomorrowland Transit Authority ", "")
+        .replace("Presented by Delta", "")
+        .replace(" - Legend of the Forbidden Mountain", "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+      const wordMap = {
+        "Railroad": "RR",
+        "Mountain": "Mtn",
+        "Adventure": "Adv",
+        "Adventures": "Adv",
+        "Expedition": "Exp"
+      };
+
+      short = short
+        .split(" ")
+        .map(word => wordMap[word] !== undefined ? wordMap[word] : word)
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+      if (short.length > 24) {
+        short = short
+          .replace(/\b(the|of|and|with|to|a|an)\b/gi, "")
+          .replace(/\s{2,}/g, " ")
+          .trim();
+      }
+
+      if (short.length > 24) {
+        short = short.split(" ").slice(0, 3).join(" ");
+      }
+
+      return short;
+    }
+
+    function getWaitTime(item) {
+      const standby = item?.queue?.STANDBY;
+      if (!standby) return null;
+
+      const wait = standby.waitTime;
+      if (typeof wait === "number" && Number.isFinite(wait)) return wait;
+
+      return null;
+    }
+
+    function getWaitClass(wait) {
+      if (wait >= 60) return "high";
+      if (wait >= 30) return "mid";
+      return "";
+    }
+
+    function isAttraction(item) {
+      return item?.entityType === "ATTRACTION";
+    }
+
+    function isUsableRide(item) {
+      const wait = getWaitTime(item);
+      const status = String(item?.status || "").toUpperCase();
+
+      return (
+        isAttraction(item) &&
+        typeof wait === "number" &&
+        Number.isFinite(wait) &&
+        status !== "CLOSED" &&
+        status !== "REFURBISHMENT"
+      );
+    }
+
+    function averageWait(rides) {
+      if (!rides.length) return 0;
+      const total = rides.reduce((sum, ride) => sum + ride.wait, 0);
+      return Math.round(total / rides.length);
+    }
+
+
+    function getWeatherDescription(code) {
+      const descriptions = {
+        0: "Clear",
+        1: "Mostly clear",
+        2: "Partly cloudy",
+        3: "Cloudy",
+        45: "Fog",
+        48: "Fog",
+        51: "Light drizzle",
+        53: "Drizzle",
+        55: "Heavy drizzle",
+        61: "Light rain",
+        63: "Rain",
+        65: "Heavy rain",
+        80: "Light showers",
+        81: "Showers",
+        82: "Heavy showers",
+        95: "Thunderstorms",
+        96: "Storms",
+        99: "Strong storms"
+      };
+
+      return descriptions[code] || "Weather";
+    }
+
+    async function refreshWeather() {
+      try {
+        const url =
+          "https://api.open-meteo.com/v1/forecast" +
+          "?latitude=28.3772" +
+          "&longitude=-81.5707" +
+          "&current=temperature_2m,weather_code,wind_speed_10m" +
+          "&temperature_unit=fahrenheit" +
+          "&wind_speed_unit=mph" +
+          "&timezone=America%2FNew_York";
+
+        const response = await fetch(url, { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("Weather unavailable");
+        }
+
+        const data = await response.json();
+        const current = data.current || {};
+        const temp = Math.round(current.temperature_2m);
+        const wind = Math.round(current.wind_speed_10m || 0);
+        const description = getWeatherDescription(current.weather_code);
+
+        weatherMainEl.textContent = `${temp}° Bay Lake`;
+        weatherSubEl.textContent = `${description} • Wind ${wind} mph`;
+      } catch (error) {
+        console.error(error);
+        weatherMainEl.textContent = "--° Bay Lake";
+        weatherSubEl.textContent = "Weather unavailable";
+      }
+    }
+
+    async function refreshAllData() {
+      updateClock();
+      await Promise.all([
+        refreshData(),
+        refreshWeather()
+      ]);
+    }
+
+    function renderShell() {
+      parkGrid.innerHTML = PARKS.map(park => `
+        <section class="park-card" id="park-${park.id}">
+          <div class="park-head">
+            <div class="park-name">${park.name}</div>
+            <div class="avg">AVG --</div>
+          </div>
+          <div class="loading">Loading ${park.name}...</div>
+        </section>
+      `).join("");
+    }
+
+    function renderPark(park, rides, errorMessage = "") {
+      const card = document.getElementById(`park-${park.id}`);
+      if (!card) return;
+
+      if (errorMessage) {
+        card.innerHTML = `
+          <div class="park-head">
+            <div class="park-name"><span class="status-dot bad"></span>${park.name}</div>
+            <div class="avg">ERROR</div>
+          </div>
+          <div class="error">${errorMessage}</div>
+        `;
+        return;
+      }
+
+      const avg = averageWait(rides);
+
+      const rows = Array.from({ length: 5 }, (_, index) => {
+        const ride = rides[index];
+
+        if (!ride) {
+          return `
+            <div class="ride empty">
+              <div class="ride-name">&nbsp;</div>
+              <div class="wait">--<span class="mins">MIN</span></div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="ride">
+            <div class="ride-name">${ride.name}</div>
+            <div class="wait ${getWaitClass(ride.wait)}">${ride.wait}<span class="mins">MIN</span></div>
+          </div>
+        `;
+      }).join("");
+
+      card.innerHTML = `
+        <div class="park-head">
+          <div class="park-name"><span class="status-dot"></span>${park.name}</div>
+          <div class="avg">AVG ${avg} MIN</div>
+        </div>
+        <div class="rides">${rows}</div>
+      `;
+    }
+
+    async function fetchPark(park) {
+      const url = `${API_BASE}/${park.id}/live`;
+      const response = await fetch(url, {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error(`Unable to load ${park.name}`);
+      }
+
+      const data = await response.json();
+      const liveData = Array.isArray(data?.liveData) ? data.liveData : [];
+
+      return liveData
+        .filter(isUsableRide)
+        .map(item => ({
+          name: shortenRideName(item.name),
+          wait: getWaitTime(item)
+        }))
+        .sort((a, b) => b.wait - a.wait)
+        .slice(0, 5);
+    }
+
+    async function refreshData() {
+      lastUpdatedEl.textContent = "Refreshing...";
+
+      await Promise.all(
+        PARKS.map(async park => {
+          try {
+            const rides = await fetchPark(park);
+            renderPark(park, rides);
+          } catch (error) {
+            console.error(error);
+            renderPark(park, [], "Live data unavailable");
+          }
+        })
+      );
+
+      lastUpdatedEl.textContent = `Updated ${formatClock()}`;
+    }
+
+    function scheduleTopOfMinuteRefresh() {
+      const now = new Date();
+      const msUntilNextMinute =
+        (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+      setTimeout(() => {
+        refreshAllData();
+        setInterval(refreshAllData, REFRESH_MS);
+      }, Math.max(msUntilNextMinute, 1000));
+    }
+
+    renderShell();
+    updateClock();
+    setInterval(updateClock, 1000);
+    refreshAllData();
+    scheduleTopOfMinuteRefresh();
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        refreshAllData();
+      }
+    });
+  </script>
+</body>
+</html>
