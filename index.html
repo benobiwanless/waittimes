@@ -166,17 +166,21 @@
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
-      padding: clamp(7px, 0.8vw, 12px) clamp(10px, 1.1vw, 16px);
+      min-height: clamp(42px, 5.2vh, 54px);
+      padding: clamp(5px, 0.6vw, 8px) clamp(10px, 1.1vw, 16px);
       border-bottom: 1px solid rgba(110, 170, 255, 0.24);
       background: rgba(255, 255, 255, 0.035);
     }
 
     .park-name {
       min-width: 0;
-      font-size: clamp(21px, 2.65vw, 38px);
+      display: flex;
+      align-items: center;
+      font-size: clamp(20px, 2.45vw, 34px);
       font-weight: 1000;
-      line-height: 1;
-      letter-spacing: 0.035em;
+      line-height: 1.08;
+      padding-bottom: 2px;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
       color: var(--text);
       white-space: nowrap;
@@ -185,8 +189,13 @@
     }
 
     .avg {
-      font-size: clamp(13px, 1.45vw, 21px);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      font-size: clamp(12px, 1.3vw, 18px);
       font-weight: 900;
+      line-height: 1.05;
+      padding-bottom: 1px;
       color: var(--blue);
       text-align: right;
       white-space: nowrap;
@@ -198,7 +207,7 @@
       display: grid;
       grid-template-rows: repeat(3, minmax(0, 1fr));
       padding: clamp(5px, 0.7vw, 10px);
-      gap: clamp(3px, 0.45vh, 7px);
+      gap: clamp(3px, 0.35vh, 6px);
     }
 
     .ride {
