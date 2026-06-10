@@ -237,20 +237,6 @@
       text-overflow: ellipsis;
     }
 
-
-    .rank {
-      display: inline-grid;
-      place-items: center;
-      width: 1.35em;
-      height: 1.35em;
-      margin-right: 0.35em;
-      border-radius: 50%;
-      font-size: 0.72em;
-      color: var(--blue);
-      background: rgba(101, 184, 255, 0.12);
-      flex: 0 0 auto;
-    }
-
     .wait {
       min-width: clamp(72px, 8.2vw, 112px);
       text-align: right;
@@ -652,7 +638,7 @@
       if (errorMessage) {
         card.innerHTML = `
           <div class="park-head">
-            <div class="park-name"><span class="status-dot bad"></span>${park.name}</div>
+            <div class="park-name">${park.name}</div>
             <div class="avg">ERROR</div>
           </div>
           <div class="error">${errorMessage}</div>
@@ -681,7 +667,7 @@
 
         return `
           <div class="ride">
-            <div class="ride-name"><span class="rank">${rank}</span>${ride.name}</div>
+            <div class="ride-name">${ride.name}</div>
             <div class="wait ${getWaitClass(ride.wait)}">${ride.wait}</div>
           </div>
         `;
@@ -689,7 +675,7 @@
 
       card.innerHTML = `
         <div class="park-head">
-          <div class="park-name"><span class="status-dot"></span>${park.name}</div>
+          <div class="park-name">${park.name}</div>
           <div class="avg">AVG ${avg} MIN</div>
         </div>
         <div class="rides">${rows}</div>
