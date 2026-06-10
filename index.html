@@ -181,7 +181,7 @@
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
-      min-height: clamp(42px, 5.2vh, 54px);
+      min-height: clamp(52px, 6.2vh, 66px);
       padding: clamp(5px, 0.6vw, 8px) clamp(10px, 1.1vw, 16px);
       border-bottom: 1px solid rgba(110, 170, 255, 0.24);
       background: rgba(255, 255, 255, 0.035);
@@ -190,17 +190,37 @@
     .park-name {
       min-width: 0;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
+      line-height: 1.02;
+      padding-bottom: 1px;
+      color: var(--text);
+      overflow: hidden;
+      white-space: normal;
+    }
+
+    .park-title {
+      min-width: 0;
       font-size: clamp(20px, 2.45vw, 34px);
       font-weight: 1000;
-      line-height: 1.08;
-      padding-bottom: 2px;
       letter-spacing: 0.03em;
       text-transform: uppercase;
-      color: var(--text);
+      line-height: 1.02;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .park-hours {
+      display: block;
+      font-size: clamp(10px, 1vw, 14px);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--muted);
+      white-space: nowrap;
+      text-transform: uppercase;
     }
 
     .avg {
@@ -385,6 +405,7 @@
     let currentRidePage = 0;
     let totalRidePages = 1;
     const parkRideStore = {};
+    const parkHoursStore = {};
 
     const parkGrid = document.getElementById("parkGrid");
     const clockEl = document.getElementById("clock");
@@ -401,6 +422,62 @@
 
     function updateClock() {
       clockEl.textContent = formatClock();
+    }
+
+    function getTodayString() {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date());
+    }
+
+    function formatHoursTime(isoString) {
+      if (!isoString) return "";
+      const date = new Date(isoString);
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const suffix = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      return minutes === 0
+        ? `${hours}${suffix}`
+        : `${hours}:${String(minutes).padStart(2, "0")}${suffix}`;
+    }
+
+    function formatOperatingHours(entry) {
+      if (!entry) return "";
+      const open = entry.openingTime || entry.startTime || entry.openTime;
+      const close = entry.closingTime || entry.endTime || entry.closeTime;
+      if (!open || !close) return "";
+      return `${formatHoursTime(open)}-${formatHoursTime(close)}`;
+    }
+
+    async function fetchParkHours(park) {
+      const url = `${API_BASE}/${park.id}/schedule`;
+      const response = await fetch(url, { cache: "no-store" });
+
+      if (!response.ok) {
+        throw new Error(`Unable to load hours for ${park.name}`);
+      }
+
+      const data = await response.json();
+      const schedule = Array.isArray(data?.schedule) ? data.schedule :
+                       Array.isArray(data?.scheduleData) ? data.scheduleData : [];
+      const today = getTodayString();
+
+      const todaysEntries = schedule.filter(entry => {
+        const date = entry?.date || entry?.day;
+        return date === today;
+      });
+
+      const regularEntry =
+        todaysEntries.find(entry => {
+          const type = String(entry?.type || entry?.scheduleType || "").toUpperCase();
+          return type === "OPERATING" || type === "REGULAR";
+        }) || todaysEntries[0];
+
+      return formatOperatingHours(regularEntry);
     }
 
     function shortenRideName(name) {
@@ -651,9 +728,13 @@
       if (!card) return;
 
       if (errorMessage) {
+        const hoursText = parkHoursStore[park.id] || "";
         card.innerHTML = `
           <div class="park-head">
-            <div class="park-name">${park.name}</div>
+            <div class="park-name">
+              <span class="park-title">${park.name}</span>
+              ${hoursText ? `<span class="park-hours">${hoursText}</span>` : ""}
+            </div>
             <div class="avg">ERROR</div>
           </div>
           <div class="error">${errorMessage}</div>
@@ -688,9 +769,13 @@
         `;
       }).join("");
 
+      const hoursText = parkHoursStore[park.id] || "";
       card.innerHTML = `
         <div class="park-head">
-          <div class="park-name">${park.name}</div>
+          <div class="park-name">
+            <span class="park-title">${park.name}</span>
+            ${hoursText ? `<span class="park-hours">${hoursText}</span>` : ""}
+          </div>
           <div class="avg">AVG ${avg} MIN</div>
         </div>
         <div class="rides">${rows}</div>
@@ -726,12 +811,17 @@
       await Promise.all(
         PARKS.map(async park => {
           try {
-            const rides = await fetchPark(park);
+            const [rides, hours] = await Promise.all([
+              fetchPark(park),
+              fetchParkHours(park).catch(() => "")
+            ]);
             parkRideStore[park.id] = rides;
+            parkHoursStore[park.id] = hours;
             renderPark(park, rides);
           } catch (error) {
             console.error(error);
             parkRideStore[park.id] = [];
+            parkHoursStore[park.id] = parkHoursStore[park.id] || "";
             renderPark(park, [], "Live data unavailable");
           }
         })
