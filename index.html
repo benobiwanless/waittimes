@@ -46,23 +46,24 @@
     }
 
     .topbar {
-      height: clamp(58px, 7.8vh, 78px);
-      min-height: 56px;
+      height: clamp(68px, 9.2vh, 92px);
+      min-height: 68px;
       display: grid;
       grid-template-columns: minmax(230px, 1fr) minmax(420px, 1.4fr) minmax(230px, 1fr);
       gap: clamp(6px, 0.8vw, 11px);
       align-items: center;
-      padding: 0 clamp(8px, 1vw, 16px);
+      padding: clamp(4px, 0.45vh, 6px) clamp(8px, 1vw, 16px);
       margin-bottom: clamp(6px, 0.8vh, 10px);
       border: 1px solid var(--line);
       border-radius: 16px;
       background: linear-gradient(180deg, rgba(15, 24, 45, 0.92), rgba(7, 11, 20, 0.92));
       box-shadow: var(--shadow);
+      overflow: hidden;
     }
 
     .title {
       min-width: 0;
-      overflow: visible;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -72,9 +73,9 @@
 
     .title h1 {
       margin: 0;
-      font-size: clamp(22px, 3.15vw, 42px);
-      line-height: 1.22;
-      padding-bottom: 3px;
+      font-size: clamp(21px, 2.95vw, 39px);
+      line-height: 1.08;
+      padding-bottom: 1px;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       white-space: nowrap;
@@ -95,15 +96,20 @@
 
     .weatherbox {
       min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       text-align: left;
       white-space: nowrap;
       overflow: hidden;
     }
 
     .weather-main {
-      font-size: clamp(22px, 3vw, 42px);
+      font-size: clamp(20px, 2.7vw, 36px);
       font-weight: 1000;
-      line-height: 1.05;
+      line-height: 1.02;
+      margin: 0;
       color: var(--blue);
       text-shadow: 0 0 18px rgba(101, 184, 255, 0.45);
       overflow: hidden;
@@ -111,32 +117,41 @@
     }
 
     .weather-sub {
-      margin-top: 4px;
-      font-size: clamp(10px, 1.1vw, 15px);
+      margin-top: 1px;
+      font-size: clamp(9px, 0.95vw, 13px);
+      line-height: 1;
       color: var(--muted);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .clockbox {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-end;
       text-align: right;
       white-space: nowrap;
       padding-left: clamp(8px, 1vw, 16px);
+      overflow: hidden;
     }
 
     .clock {
-      font-size: clamp(24px, 3.4vw, 46px);
+      font-size: clamp(22px, 3vw, 40px);
       font-weight: 900;
       line-height: 1;
+      margin: 0;
       color: var(--blue);
       text-shadow: 0 0 18px rgba(101, 184, 255, 0.45);
     }
 
     .refresh {
-      margin-top: 5px;
-      font-size: clamp(10px, 1.1vw, 15px);
+      margin-top: 1px;
+      font-size: clamp(9px, 0.95vw, 13px);
+      line-height: 1;
       color: var(--muted);
     }
 
