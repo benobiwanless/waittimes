@@ -46,7 +46,7 @@
     }
 
     .topbar {
-      height: clamp(62px, 8.8vh, 90px);
+      height: clamp(58px, 7.8vh, 78px);
       min-height: 56px;
       display: grid;
       grid-template-columns: minmax(230px, 1fr) minmax(420px, 1.4fr) minmax(230px, 1fr);
@@ -196,7 +196,7 @@
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-rows: repeat(5, minmax(0, 1fr));
+      grid-template-rows: repeat(3, minmax(0, 1fr));
       padding: clamp(5px, 0.7vw, 10px);
       gap: clamp(3px, 0.45vh, 7px);
     }
@@ -228,8 +228,22 @@
       text-overflow: ellipsis;
     }
 
+
+    .rank {
+      display: inline-grid;
+      place-items: center;
+      width: 1.35em;
+      height: 1.35em;
+      margin-right: 0.35em;
+      border-radius: 50%;
+      font-size: 0.72em;
+      color: var(--blue);
+      background: rgba(101, 184, 255, 0.12);
+      flex: 0 0 auto;
+    }
+
     .wait {
-      min-width: clamp(76px, 9.2vw, 128px);
+      min-width: clamp(72px, 8.2vw, 112px);
       text-align: right;
       font-size: clamp(22px, 3.05vw, 41px);
       font-weight: 1000;
@@ -355,6 +369,11 @@
 
     const API_BASE = "https://api.themeparks.wiki/v1/entity";
     const REFRESH_MS = 60 * 1000;
+    const RIDE_PAGE_MS = 5 * 1000;
+    const RIDES_PER_PAGE = 3;
+    const TOTAL_RIDES_PER_PARK = 9;
+    let currentRidePage = 0;
+    const parkRideStore = {};
 
     const parkGrid = document.getElementById("parkGrid");
     const clockEl = document.getElementById("clock");
@@ -591,6 +610,19 @@
       `).join("");
     }
 
+    function getRidePageLabel() {
+      const start = currentRidePage * RIDES_PER_PAGE + 1;
+      const end = start + RIDES_PER_PAGE - 1;
+      return `${start}-${end}`;
+    }
+
+    function rerenderAllParks() {
+      PARKS.forEach(park => {
+        const rides = parkRideStore[park.id] || [];
+        renderPark(park, rides);
+      });
+    }
+
     function renderPark(park, rides, errorMessage = "") {
       const card = document.getElementById(`park-${park.id}`);
       if (!card) return;
@@ -607,9 +639,12 @@
       }
 
       const avg = averageWait(rides);
+      const startIndex = currentRidePage * RIDES_PER_PAGE;
+      const pageRides = rides.slice(startIndex, startIndex + RIDES_PER_PAGE);
 
-      const rows = Array.from({ length: 5 }, (_, index) => {
-        const ride = rides[index];
+      const rows = Array.from({ length: RIDES_PER_PAGE }, (_, index) => {
+        const ride = pageRides[index];
+        const rank = startIndex + index + 1;
 
         if (!ride) {
           return `
@@ -622,7 +657,7 @@
 
         return `
           <div class="ride">
-            <div class="ride-name">${ride.name}</div>
+            <div class="ride-name"><span class="rank">${rank}</span>${ride.name}</div>
             <div class="wait ${getWaitClass(ride.wait)}">${ride.wait}<span class="mins">MIN</span></div>
           </div>
         `;
@@ -631,7 +666,7 @@
       card.innerHTML = `
         <div class="park-head">
           <div class="park-name"><span class="status-dot"></span>${park.name}</div>
-          <div class="avg">AVG ${avg} MIN</div>
+          <div class="avg">AVG ${avg} MIN • ${getRidePageLabel()}</div>
         </div>
         <div class="rides">${rows}</div>
       `;
@@ -657,7 +692,7 @@
           wait: getWaitTime(item)
         }))
         .sort((a, b) => b.wait - a.wait)
-        .slice(0, 5);
+        .slice(0, TOTAL_RIDES_PER_PARK);
     }
 
     async function refreshData() {
@@ -667,9 +702,11 @@
         PARKS.map(async park => {
           try {
             const rides = await fetchPark(park);
+            parkRideStore[park.id] = rides;
             renderPark(park, rides);
           } catch (error) {
             console.error(error);
+            parkRideStore[park.id] = [];
             renderPark(park, [], "Live data unavailable");
           }
         })
@@ -692,6 +729,10 @@
     renderShell();
     updateClock();
     setInterval(updateClock, 1000);
+    setInterval(() => {
+      currentRidePage = (currentRidePage + 1) % 3;
+      rerenderAllParks();
+    }, RIDE_PAGE_MS);
     refreshAllData();
     scheduleTopOfMinuteRefresh();
 
