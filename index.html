@@ -240,7 +240,7 @@
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-rows: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(5, minmax(0, 1fr));
       padding: clamp(5px, 0.7vw, 10px);
       gap: clamp(3px, 0.35vh, 6px);
     }
@@ -399,11 +399,8 @@
 
     const API_BASE = "https://api.themeparks.wiki/v1/entity";
     const REFRESH_MS = 60 * 1000;
-    const RIDE_PAGE_MS = 5 * 1000;
-    const RIDES_PER_PAGE = 3;
-    const TOTAL_RIDES_PER_PARK = 9;
-    let currentRidePage = 0;
-    let totalRidePages = 1;
+    const RIDES_PER_PAGE = 5;
+    const TOTAL_RIDES_PER_PARK = 5;
     const parkRideStore = {};
     const parkHoursStore = {};
 
@@ -698,24 +695,6 @@
       `).join("");
     }
 
-    function getParkPageCount(rides) {
-      return Math.max(1, Math.ceil((rides?.length || 0) / RIDES_PER_PAGE));
-    }
-
-    function updateTotalRidePages() {
-      const counts = PARKS.map(park => getParkPageCount(parkRideStore[park.id] || []));
-      totalRidePages = Math.max(1, ...counts);
-      if (currentRidePage >= totalRidePages) {
-        currentRidePage = 0;
-      }
-    }
-
-    function getRidePageLabel(pageIndex, pageRides) {
-      const start = pageIndex * RIDES_PER_PAGE + 1;
-      const end = start + Math.max((pageRides?.length || 0) - 1, 0);
-      return pageRides && pageRides.length ? `${start}-${end}` : `${start}-${start + RIDES_PER_PAGE - 1}`;
-    }
-
     function rerenderAllParks() {
       PARKS.forEach(park => {
         const rides = parkRideStore[park.id] || [];
@@ -743,10 +722,8 @@
       }
 
       const avg = averageWait(rides);
-      const parkPageCount = getParkPageCount(rides);
-      const pageIndex = Math.min(currentRidePage, parkPageCount - 1);
-      const startIndex = pageIndex * RIDES_PER_PAGE;
-      const pageRides = rides.slice(startIndex, startIndex + RIDES_PER_PAGE);
+      const startIndex = 0;
+      const pageRides = rides.slice(0, RIDES_PER_PAGE);
 
       const rows = Array.from({ length: RIDES_PER_PAGE }, (_, index) => {
         const ride = pageRides[index];
@@ -827,7 +804,6 @@
         })
       );
 
-      updateTotalRidePages();
       lastUpdatedEl.textContent = `Updated ${formatClock()}`;
     }
 
@@ -845,10 +821,6 @@
     renderShell();
     updateClock();
     setInterval(updateClock, 1000);
-    setInterval(() => {
-      currentRidePage = (currentRidePage + 1) % totalRidePages;
-      rerenderAllParks();
-    }, RIDE_PAGE_MS);
     refreshAllData();
     scheduleTopOfMinuteRefresh();
 
